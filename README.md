@@ -1,4 +1,4 @@
-![Workflow Architecture Diagram](image_ce4fff.png)
+![Workflow Architecture Diagram](workflow-structure.png) (2).png)
 # Fuzzy Input Parser & Data Cleaner
 
 ## 📌 Project Overview
