@@ -1,0 +1,112 @@
+{
+  "name": "Fuzzy Input Parser & Data Cleaner",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "fuzzy-input",
+        "options": {}
+      },
+      "id": "webhook-node",
+      "name": "Webhook Ingestion",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "model": "gpt-4o",
+        "options": {
+          "responseFormat": {
+            "type": "json_object"
+          }
+        },
+        "prompt": "=Parse the following unstructured data into a clean, strict JSON schema with keys: 'name', 'company', 'email', 'urgency_score' (1-10), and 'summary'. Raw Input: {{ $json.body.raw_text }}"
+      },
+      "id": "llm-node",
+      "name": "OpenAI Structured Parser",
+      "type": "n8n-nodes-base.openAi",
+      "typeVersion": 1,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.output.name }}",
+              "operation": "isNotEmpty"
+            }
+          ]
+        }
+      },
+      "id": "if-node",
+      "name": "Validation Check",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [650, 300]
+    },
+    {
+      "parameters": {
+        "notice": "Fallback initiated due to empty or malformed payload."
+      },
+      "id": "fallback-node",
+      "name": "Error Routing",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [850, 420]
+    },
+    {
+      "parameters": {
+        "notice": "Data successfully validated and ready for database execution."
+      },
+      "id": "success-node",
+      "name": "Execution Success",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [850, 180]
+    }
+  ],
+  "connections": {
+    "Webhook Ingestion": {
+      "main": [
+        [
+          {
+            "node": "OpenAI Structured Parser",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Structured Parser": {
+      "main": [
+        [
+          {
+            "node": "Validation Check",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validation Check": {
+      "main": [
+        [
+          {
+            "node": "Execution Success",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Error Routing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}
